@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nine Skies — A Field Guide to Wellbeing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0E27;
+    --bg2:#12163a;
+    --panel:#151a42;
+    --ink:#EDEBFA;
+    --ink-dim:#9AA0C8;
+    --line: rgba(154,160,200,0.22);
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  [data-theme="light"]{
+    --bg:#F7F6FB;
+    --bg2:#ECEAF7;
+    --panel:#FFFFFF;
+    --ink:#191C33;
+    --ink-dim:#5C5F82;
+    --line: rgba(40,40,80,0.16);
+  }
+  [data-theme="light"] #starfield{ display:none; }
+  [data-theme="light"] .tile{ box-shadow:0 1px 2px rgba(20,20,50,.08); }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.6;
+    overflow-x:hidden;
+    position:relative;
+    transition:background .25s ease, color .25s ease;
+  }
+
+  .underline-emphasis{ text-decoration:underline; text-underline-offset:3px; }
+
+  .theme-toggle{
+    display:inline-flex; align-items:center; gap:6px;
+    background:transparent; border:1px solid var(--line); color:var(--ink);
+    border-radius:999px; padding:8px 16px; font-family:var(--sans);
+    font-size:13px; cursor:pointer;
+  }
+  .theme-toggle:hover{ border-color:var(--ink-dim); }
+
+  #starfield{
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+  }
+  #starfield span{
+    position:absolute; width:2px; height:2px; border-radius:50%;
+    background:#fff; opacity:.35;
+    animation:twinkle 5s ease-in-out infinite;
+  }
+  @keyframes twinkle{ 0%,100%{opacity:.15;} 50%{opacity:.7;} }
+
+  header, main, footer{ position:relative; z-index:1; }
+
+  /* ---------- header ---------- */
+  .site-header{
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:12px;
+    padding:22px clamp(20px,5vw,64px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    font-size:26px; color:#FFD166; line-height:1;
+  }
+  .brand-title{
+    font-family:var(--serif); font-weight:600; font-size:20px; margin:0;
+    letter-spacing:.01em;
+  }
+  .brand-sub{ margin:0; font-size:13px; color:var(--ink-dim); }
+  .progress-readout{
+    font-size:13px; color:var(--ink-dim);
+    border:1px solid var(--line); border-radius:999px;
+    padding:8px 16px;
+  }
+  .progress-readout strong{ color:var(--ink); font-weight:600; }
+
+  /* ---------- hero ---------- */
+  .hero{
+    display:grid; grid-template-columns:1fr 1fr; gap:40px;
+    align-items:center;
+    padding:clamp(30px,6vw,70px) clamp(20px,5vw,64px) 20px;
+    max-width:1320px; margin:0 auto;
+  }
+  .hero h1{
+    font-family:var(--serif); font-weight:600; font-size:clamp(34px,4.4vw,54px);
+    line-height:1.1; margin:0 0 20px;
+    font-variation-settings:'opsz' 40;
+  }
+  .hero-lede{ color:var(--ink-dim); font-size:16px; max-width:46ch; }
+  .sky-wrap{ display:flex; justify-content:center; }
+  #sky{ width:100%; max-width:520px; height:auto; }
+
+  .star-group{ cursor:pointer; }
+  .star-group:focus-visible .star-core{ stroke:#fff; stroke-width:2; }
+  .star-label{
+    font-family:var(--sans); font-size:13px; font-weight:600;
+    fill:var(--ink); text-anchor:middle; pointer-events:none;
+  }
+  .star-sub{
+    font-family:var(--sans); font-size:9px; fill:var(--ink-dim);
+    text-anchor:middle; pointer-events:none;
+  }
+  .constellation-line{ stroke:var(--line); stroke-width:1; fill:none; }
+  .star-glow{ transition:opacity .25s ease, r .25s ease; }
+  .star-core{ transition:r .25s ease, filter .2s ease; }
+  .star-group:hover .star-core, .star-group:focus-visible .star-core{ filter:brightness(1.25); }
+
+  /* ---------- drawer ---------- */
+  .backdrop{
+    position:fixed; inset:0; background:rgba(6,8,20,.6);
+    opacity:0; pointer-events:none; transition:opacity .25s ease;
+    z-index:5;
+  }
+  .backdrop.open{ opacity:1; pointer-events:auto; }
+
+  .drawer{
+    position:fixed; top:0; right:0; height:100%;
+    width:min(560px,92vw);
+    background:var(--panel);
+    border-left:1px solid var(--line);
+    transform:translateX(100%);
+    transition:transform .3s ease;
+    z-index:6; overflow-y:auto;
+    padding:26px clamp(20px,4vw,40px) 60px;
+  }
+  .drawer.open{ transform:translateX(0); }
+  .drawer-top-bar{
+    height:6px; border-radius:4px; margin-bottom:22px;
+  }
+  .drawer-close{
+    background:none; border:1px solid var(--line); color:var(--ink);
+    border-radius:8px; padding:7px 14px; font-family:var(--sans);
+    font-size:13px; cursor:pointer; float:right;
+  }
+  .drawer-close:hover{ border-color:var(--ink-dim); }
+  .drawer-eyebrow{ font-size:13px; color:var(--ink-dim); margin:20px 0 6px; clear:both; }
+  .drawer h2{
+    font-family:var(--serif); font-weight:600; font-size:30px; margin:0 0 6px;
+  }
+  .drawer-tagline{ color:var(--ink-dim); font-style:italic; margin:0 0 22px; }
+  .drawer p.body-text{ font-size:16px; margin:0 0 26px; max-width:60ch; }
+
+  .term{
+    border-bottom:1px dotted currentColor;
+    cursor:pointer; font-weight:600;
+  }
+  .term-pop{
+    display:none; margin:4px 0 14px; padding:10px 14px;
+    background:rgba(255,255,255,.05); border-radius:10px;
+    font-size:14px; color:var(--ink-dim);
+  }
+  .term-pop.open{ display:block; }
+
+  .vocab-heading{ font-family:var(--serif); font-size:18px; font-weight:600; margin:0 0 12px; }
+  .vocab-list{ list-style:none; margin:0 0 30px; padding:0; display:grid; gap:8px; }
+  .vocab-item{
+    border:1px solid var(--line); border-radius:10px; padding:10px 14px;
+    cursor:pointer;
+  }
+  .vocab-word{ font-weight:600; }
+  .vocab-def{ display:none; color:var(--ink-dim); font-size:14px; margin-top:6px; }
+  .vocab-item.open .vocab-def{ display:block; }
+
+  .quiz-box{ border:1px solid var(--line); border-radius:14px; padding:20px; }
+  .quiz-box h3{ font-family:var(--serif); font-size:18px; margin:0 0 14px; font-weight:600; }
+  .quiz-options{ display:grid; gap:8px; margin-bottom:4px; }
+  .quiz-options button{
+    text-align:left; padding:10px 14px; border-radius:9px;
+    border:1px solid var(--line); background:transparent; color:var(--ink);
+    font-family:var(--sans); font-size:14px; cursor:pointer;
+  }
+  .quiz-options button:hover:not(:disabled){ border-color:var(--ink-dim); }
+  .quiz-options button.correct{ border-color:#52B788; background:rgba(82,183,136,.15); }
+  .quiz-options button.incorrect{ border-color:#EF476F; background:rgba(239,71,111,.15); }
+  .quiz-options button:disabled{ cursor:default; opacity:.85; }
+  .quiz-feedback{ font-size:14px; color:var(--ink-dim); margin-top:12px; display:none; }
+  .quiz-feedback.open{ display:block; }
+
+  /* ---------- lexicon ---------- */
+  .lexicon, .chart-sky, .practice{
+    max-width:1000px; margin:0 auto; padding:60px clamp(20px,5vw,64px);
+  }
+  .lexicon h2, .chart-sky h2, .practice h2{
+    font-family:var(--serif); font-weight:600; font-size:28px; margin:0 0 10px;
+  }
+  .lexicon-empty{ color:var(--ink-dim); }
+  .lexicon-grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+    gap:12px; margin-top:20px;
+  }
+  .lex-card{
+    border-left:3px solid; border-radius:6px;
+    background:var(--panel); padding:12px 14px;
+  }
+  .lex-word{ font-weight:600; font-size:14px; }
+  .lex-def{ font-size:13px; color:var(--ink-dim); margin-top:4px; }
+
+  /* ---------- chart your sky ---------- */
+  .chart-sky p{ color:var(--ink-dim); max-width:62ch; }
+  .sliders{ display:grid; gap:16px; margin-top:26px; }
+  .slider-row{ display:grid; grid-template-columns:140px 1fr 70px; align-items:center; gap:14px; }
+  .slider-name{ font-size:14px; font-weight:600; }
+  .slider-row input[type=range]{ width:100%; accent-color:#9AA0C8; }
+  .slider-state{ font-size:13px; color:var(--ink-dim); text-align:right; }
+
+  .practice p{ color:var(--ink-dim); max-width:62ch; }
+  .tab-row{ display:flex; gap:10px; margin:20px 0 26px; }
+  .tab-btn{
+    padding:9px 18px; border-radius:999px; border:1px solid var(--line);
+    background:transparent; color:var(--ink-dim); font-family:var(--sans);
+    font-size:14px; cursor:pointer;
+  }
+  .tab-btn.active{ color:var(--ink); border-color:var(--ink-dim); background:rgba(255,255,255,.06); }
+  .practice-panel[hidden]{ display:none; }
+  .practice-grid{
+    display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+  }
+  .practice-card{
+    border:1px solid var(--line); border-radius:12px; padding:18px; background:var(--panel);
+  }
+  .practice-card .sentence{ margin:0 0 14px; font-size:15px; color:var(--ink); }
+  .practice-card select{
+    background:var(--bg2); color:var(--ink); border:1px solid var(--line);
+    border-radius:8px; padding:5px 10px; font-family:var(--sans); font-size:14px;
+  }
+  .practice-card .check-btn, .practice-card .reset-btn{
+    padding:7px 14px; border-radius:8px; border:1px solid var(--line);
+    background:transparent; color:var(--ink); cursor:pointer; font-size:13px;
+  }
+  .practice-card .check-btn:hover, .practice-card .reset-btn:hover{ border-color:var(--ink-dim); }
+  .practice-feedback{ font-size:13px; margin:10px 0 0; display:none; }
+  .practice-feedback.open{ display:block; }
+  .practice-feedback.correct{ color:#52B788; }
+  .practice-feedback.incorrect{ color:#EF476F; }
+  .scramble-hint{ color:var(--ink-dim); font-size:13px; margin:0 0 14px; }
+  .answer-row{
+    display:flex; flex-wrap:wrap; gap:6px; min-height:40px;
+    border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:10px;
+  }
+  .tile-row{ display:flex; flex-wrap:wrap; gap:6px; min-height:40px; margin-bottom:4px; }
+  .tile{
+    width:34px; height:34px; border-radius:8px; border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--serif); font-weight:600; font-size:15px; cursor:pointer;
+    background:var(--bg2); color:var(--ink); user-select:none;
+  }
+  .tile:hover{ border-color:var(--ink-dim); }
+  .scramble-actions{ display:flex; gap:8px; margin-top:12px; }
+
+  footer{
+    text-align:center; color:var(--ink-dim); font-size:13px;
+    padding:30px 20px 50px; border-top:1px solid var(--line);
+  }
+  footer .credit{
+    font-size:15px; color:var(--ink); margin-top:8px;
+  }
+
+  @media (max-width:840px){
+    .hero{ grid-template-columns:1fr; }
+    .slider-row{ grid-template-columns:100px 1fr 60px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    #starfield span{ animation:none; opacity:.3; }
+    .drawer{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="starfield"></div>
+
+<header class="site-header">
+  <div class="brand">
+    <span class="brand-mark">✶</span>
+    <div>
+      <p class="brand-title">Nine Skies</p>
+      <p class="brand-sub">A field guide to wellbeing</p>
+    </div>
+  </div>
+  <div class="progress-readout">
+    <strong id="dimCount">0</strong>/9 dimensions charted &nbsp;·&nbsp; <strong id="wordCount">0</strong> words collected
+  </div>
+  <button class="theme-toggle" id="themeToggle">Light mode</button>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="hero-copy">
+      <h1>Wellbeing has nine skies.<br>Chart yours.</h1>
+      <p class="hero-lede">Nine dimensions shape how well you live: physical, emotional, social, intellectual, environmental, spiritual, occupational, financial, and cultural. <span class="underline-emphasis">Choose a star to explore one, collect some genuinely useful vocabulary along the way, and later, rate how brightly each one currently burns in your own life.</span></p>
+    </div>
+    <div class="sky-wrap">
+      <svg id="sky" viewBox="0 0 800 800" role="img" aria-label="A constellation of nine stars, each representing a dimension of wellness"></svg>
+    </div>
+  </section>
+
+  <section class="lexicon" id="lexiconSection">
+    <h2>Your Lexicon</h2>
+    <p class="lexicon-empty" id="lexiconEmpty">Open a star above to start collecting words here.</p>
+    <div class="lexicon-grid" id="lexiconGrid"></div>
+  </section>
+
+  <section class="chart-sky">
+    <h2>Rate your own sky</h2>
+    <p>For each dimension, decide how bright it feels in your life right now, from faint to blazing. Move a slider and watch the matching star change above.</p>
+    <div class="sliders" id="sliders"></div>
+  </section>
+
+  <section class="practice" id="practice">
+    <h2>Test yourself</h2>
+    <p>Two short exercises pull vocabulary from across all nine dimensions. Try both, and use the hints if you get stuck.</p>
+    <div class="tab-row">
+      <button class="tab-btn active" data-tab="fill" id="tabFill">Fill the gap</button>
+      <button class="tab-btn" data-tab="scramble" id="tabScramble">Unscramble</button>
+    </div>
+    <div class="practice-panel" id="fillPanel"></div>
+    <div class="practice-panel" id="scramblePanel" hidden></div>
+  </section>
+</main>
+
+<footer>
+  Nine Skies · a vocabulary field guide to the nine dimensions of wellness
+  <p class="credit">Nannestad High School · Barbara Anna Zielonka</p>
+</footer>
+
+<div class="backdrop" id="backdrop"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-top-bar" id="drawerTopBar"></div>
+  <button class="drawer-close" id="drawerClose">Close</button>
+  <div id="drawerInner"></div>
+</aside>
+
+<script>
+const DIMENSIONS = [
+  {
+    id:"physical", name:"Physical", hue:8,
+    tagline:"The body as instrument",
+    paragraph:"Physical wellness is the sustained **vitality** that lets you meet each day with energy to spare. It depends on habits that are easy to underestimate: sufficient sleep, regular **exertion**, and nourishment that actually fuels the body. A **sedentary** lifestyle gradually erodes this vitality, while consistent movement builds **resilience**, both physical and mental. Rest matters just as much as movement. During sleep, the body runs a **restorative** process, repairing tissue through the same **physiological** rhythms that exertion disrupts.",
+    vocab:[
+      {word:"vitality", def:"Energy and liveliness; the strength to stay active and engaged."},
+      {word:"exertion", def:"Physical or mental effort, especially strenuous effort."},
+      {word:"sedentary", def:"Involving little or no physical movement, often through long periods of sitting."},
+      {word:"resilience", def:"The capacity to recover quickly from difficulty or strain."},
+      {word:"restorative", def:"Helping something return to a healthy or normal state."},
+      {word:"physiological", def:"Relating to the way a living organism or its parts function."}
+    ],
+    quiz:{
+      q:"Which word describes a lifestyle involving very little movement?",
+      options:["Restorative","Sedentary","Exertion","Vitality"], correct:1,
+      explain:"Sedentary describes a way of life with prolonged sitting and very little physical activity."
+    }
+  },
+  {
+    id:"emotional", name:"Emotional", hue:38,
+    tagline:"Naming what you feel, and why",
+    paragraph:"Emotional wellness is the capacity to recognise, interpret, and **regulate** what you feel, rather than being ruled by it. It requires **introspection**, the deliberate act of looking inward to understand your own reactions. A person with strong emotional wellness can sit with discomfort without panic, can experience **vulnerability** without shame, and can hold onto **equanimity** even under stress. Suppressing emotion rarely helps in the long run. Occasional **catharsis**, the release of unexpressed feeling through tears, laughter, or honest conversation, often restores the balance that suppression destroys.",
+    vocab:[
+      {word:"introspection", def:"Careful examination of your own thoughts and feelings."},
+      {word:"regulate", def:"To manage or adjust something, especially a reaction, so it stays under control."},
+      {word:"vulnerability", def:"The state of being open to being hurt, physically or emotionally."},
+      {word:"equanimity", def:"Mental calmness and composure, especially under pressure."},
+      {word:"catharsis", def:"The release of strong or held-in emotion, often bringing relief."}
+    ],
+    quiz:{
+      q:"Which word names a calm, composed state of mind, even under pressure?",
+      options:["Catharsis","Introspection","Equanimity","Vulnerability"], correct:2,
+      explain:"Equanimity means mental calmness and composure, particularly in difficult situations."
+    }
+  },
+  {
+    id:"social", name:"Social", hue:68,
+    tagline:"The quality of your connections",
+    paragraph:"Social wellness concerns the depth and **reciprocity** of your relationships, rarely the number of people around you. Genuine **camaraderie** takes time; it grows through consistent, honest **discourse** rather than a single good conversation. **Solidarity** means standing with others through shared struggle. **Empathy** means genuinely inhabiting someone else's perspective. Together, these qualities form the foundation of this dimension, one where giving and receiving stay roughly balanced over time.",
+    vocab:[
+      {word:"reciprocity", def:"A mutual exchange in which both sides give and receive in similar measure."},
+      {word:"camaraderie", def:"Mutual trust and friendship among people who spend time together."},
+      {word:"discourse", def:"Written or spoken communication, especially serious discussion of a topic."},
+      {word:"solidarity", def:"Unity and mutual support within a group, especially in difficulty."},
+      {word:"empathy", def:"The ability to understand and share the feelings of another person."}
+    ],
+    quiz:{
+      q:"Which word describes an exchange where both people give and receive in similar measure?",
+      options:["Camaraderie","Discourse","Solidarity","Reciprocity"], correct:3,
+      explain:"Reciprocity describes a mutual exchange, roughly balanced on both sides."
+    }
+  },
+  {
+    id:"intellectual", name:"Intellectual", hue:100,
+    tagline:"Keeping the mind sharp and curious",
+    paragraph:"Intellectual wellness thrives on the willingness to question, to **scrutinise**, and to **synthesise** new ideas rather than passively absorb them. It calls for **acumen**, a sharpness of judgement developed through practice, and **discernment**, the skill of telling reliable information apart from noise. Encountering an unfamiliar **paradigm**, a fundamentally different way of thinking about a problem, can feel uncomfortable. That discomfort is often exactly what expands the mind. Real intellectual wellness has less to do with accumulating facts and more to do with the discipline of thinking well.",
+    vocab:[
+      {word:"acumen", def:"The ability to make good, quick judgements, especially in a practical situation."},
+      {word:"discernment", def:"The ability to judge well, especially in telling apart similar things."},
+      {word:"scrutinise", def:"To examine something closely and carefully."},
+      {word:"synthesise", def:"To combine separate ideas or elements into a coherent whole."},
+      {word:"paradigm", def:"A typical example or pattern of how something works; a model of thinking."}
+    ],
+    quiz:{
+      q:"Which word means a sharp, practical ability to make good judgements?",
+      options:["Paradigm","Acumen","Discernment","Synthesis"], correct:1,
+      explain:"Acumen refers to sharp, sound judgement, especially in practical matters."
+    }
+  },
+  {
+    id:"environmental", name:"Environmental", hue:150,
+    tagline:"Your relationship with the spaces you inhabit",
+    paragraph:"Environmental wellness reflects how consciously you engage with the spaces around you, both natural and built. It calls for **stewardship**, taking responsibility for resources you did not create but will pass on to others. Genuine **sustainability** means living in ways that do not deplete the **ecosystem** that sustains you. Every choice, from packaging to transport, leaves a **footprint**, a measurable trace of your impact. Small habits of conservation, turning off unused lights, reducing waste, reflect the **symbiosis** between human life and the natural world.",
+    vocab:[
+      {word:"stewardship", def:"The responsible management of something entrusted to your care."},
+      {word:"sustainability", def:"The ability to continue at a certain level without depleting resources."},
+      {word:"ecosystem", def:"A community of living things interacting with their environment."},
+      {word:"footprint", def:"The measurable impact a person or activity has, especially on the environment."},
+      {word:"symbiosis", def:"A relationship in which two different things depend on each other."}
+    ],
+    quiz:{
+      q:"Which word describes a relationship of mutual dependence between two different things?",
+      options:["Stewardship","Footprint","Symbiosis","Sustainability"], correct:2,
+      explain:"Symbiosis describes a relationship in which two different things depend on each other."
+    }
+  },
+  {
+    id:"spiritual", name:"Spiritual", hue:200,
+    tagline:"The search for meaning beyond yourself",
+    paragraph:"Spiritual wellness does not require religious belief, though it can include it. At its centre sits the pursuit of **purpose**, a reason for acting that reaches beyond narrow personal gain. **Mindfulness**, sustained attention to the present moment, supports this pursuit in a very practical way. Some people describe moments of **transcendence**, a sense of rising above ordinary, everyday concerns, during meditation, music, or time in nature. Others find spiritual wellness through **reverence**, a deep respect for something larger than themselves. Quiet **contemplation**, thought sustained over time rather than rushed, often opens the door to both.",
+    vocab:[
+      {word:"purpose", def:"A reason for doing something; a sense of direction or meaning."},
+      {word:"mindfulness", def:"Sustained, non-judgemental attention to the present moment."},
+      {word:"transcendence", def:"The experience of going beyond ordinary limits or concerns."},
+      {word:"reverence", def:"Deep respect and admiration for someone or something."},
+      {word:"contemplation", def:"Focused, quiet thought about something over time."}
+    ],
+    quiz:{
+      q:"Which word describes a brief experience of rising above ordinary, everyday concerns?",
+      options:["Mindfulness","Reverence","Transcendence","Contemplation"], correct:2,
+      explain:"Transcendence describes an experience of going beyond ordinary limits."
+    }
+  },
+  {
+    id:"occupational", name:"Occupational", hue:235,
+    tagline:"Finding fulfilment in what you do",
+    paragraph:"Occupational wellness concerns the satisfaction you draw from work, study, or any structured pursuit of a goal. It depends on recognising your own **aptitude**, a natural or trained capacity to do something well, and then applying it with **diligence**, sustained and careful effort. A **vocation**, in its fullest sense, means more than a job; it names a calling that lines up with your values. Occupational wellness also requires a measure of **autonomy**, the freedom to decide how your work gets done, since **fulfilment** rarely survives constant micromanagement.",
+    vocab:[
+      {word:"aptitude", def:"A natural or acquired ability to do something well."},
+      {word:"diligence", def:"Careful and sustained effort in a task."},
+      {word:"vocation", def:"A strong feeling that a certain kind of work suits you and matters to you."},
+      {word:"autonomy", def:"The freedom to make your own decisions and act on them."},
+      {word:"fulfilment", def:"A sense of satisfaction from achieving or doing something meaningful."}
+    ],
+    quiz:{
+      q:"Which word names a natural or trained talent for doing something well?",
+      options:["Diligence","Autonomy","Vocation","Aptitude"], correct:3,
+      explain:"Aptitude names a natural or acquired ability to do something well."
+    }
+  },
+  {
+    id:"financial", name:"Financial", hue:268,
+    tagline:"A calm, informed relationship with money",
+    paragraph:"Financial wellness has less to do with how much you earn and more to do with the **prudence** you bring to managing it. It requires financial **literacy**, a working understanding of how budgets, interest, and debt actually function. Careful, sensible judgement about spending keeps you from decisions that threaten **solvency**, your ability to meet financial obligations as they arise. None of this means rejecting **discretionary** spending altogether. It means telling needs and wants apart clearly, and choosing **frugality**, a mindful restraint in spending, when circumstances call for it.",
+    vocab:[
+      {word:"prudence", def:"Careful, sensible judgement, especially about money."},
+      {word:"literacy", def:"A working knowledge or skill in a particular area."},
+      {word:"solvency", def:"The ability to meet financial obligations as they come due."},
+      {word:"discretionary", def:"Available to be spent or used as someone chooses, not required."},
+      {word:"frugality", def:"Careful, economical use of money or resources."}
+    ],
+    quiz:{
+      q:"Which word describes spending that is optional rather than essential?",
+      options:["Solvency","Discretionary","Prudence","Frugality"], correct:1,
+      explain:"Discretionary spending is money spent by choice, not by necessity."
+    }
+  },
+  {
+    id:"cultural", name:"Cultural", hue:315,
+    tagline:"Understanding where you come from, and where others come from too",
+    paragraph:"Cultural wellness is the awareness and appreciation of the traditions, values, and histories that shape **identity**, both your own and other people's. It starts with an honest relationship to your own **heritage**, the customs and beliefs passed down through generations, and grows outward into real curiosity about unfamiliar ones. A culturally well person can navigate **pluralism**, the coexistence of many different cultural groups within one society, without asking anyone to give up who they are. That differs sharply from **assimilation**, the process through which a person adopts the norms of a dominant group, often at real cost to their own. Cultural wellness favours a **cosmopolitan** **ethos** instead, a way of thinking that treats the whole world, not just one's immediate community, as a source of belonging and learning.",
+    vocab:[
+      {word:"heritage", def:"Customs, achievements, and beliefs passed down through generations."},
+      {word:"pluralism", def:"The coexistence of many different groups or viewpoints within one society."},
+      {word:"assimilation", def:"The process of adopting the customs of a different culture or group."},
+      {word:"identity", def:"The qualities and beliefs that make a person or group distinct."},
+      {word:"cosmopolitan", def:"Familiar with, and comfortable in, many countries and cultures."},
+      {word:"ethos", def:"The characteristic spirit or set of values of a group or culture."}
+    ],
+    quiz:{
+      q:"Which word describes a society where many different cultural groups coexist?",
+      options:["Heritage","Ethos","Pluralism","Assimilation"], correct:2,
+      explain:"Pluralism describes the coexistence of many different groups or viewpoints within a single society."
+    }
+  }
+];
+
+const visited = new Set();
+const collectedWords = new Map(); // word -> {def, hue, dimName}
+
+function hslCol(hue, s, l){ return "hsl(" + hue + " " + s + "% " + l + "%)"; }
+
+/* ---------- build the sky ---------- */
+const svgNS = "http://www.w3.org/2000/svg";
+const sky = document.getElementById("sky");
+const cx = 400, cy = 400, radius = 260;
+const points = DIMENSIONS.map((d,i)=>{
+  const angle = (-90 + i*40) * Math.PI/180;
+  return { x: cx + radius*Math.cos(angle), y: cy + radius*Math.sin(angle) };
+});
+
+// star-polygon connecting lines (step of 4 across 9 points)
+for(let i=0;i<9;i++){
+  const a = points[i], b = points[(i+4)%9];
+  const line = document.createElementNS(svgNS,"line");
+  line.setAttribute("class","constellation-line");
+  line.setAttribute("x1",a.x); line.setAttribute("y1",a.y);
+  line.setAttribute("x2",b.x); line.setAttribute("y2",b.y);
+  sky.appendChild(line);
+}
+
+DIMENSIONS.forEach((d,i)=>{
+  const p = points[i];
+  const g = document.createElementNS(svgNS,"g");
+  g.setAttribute("class","star-group");
+  g.setAttribute("tabindex","0");
+  g.setAttribute("role","button");
+  g.setAttribute("aria-label","Explore " + d.name + " wellness");
+  g.dataset.id = d.id;
+
+  const glow = document.createElementNS(svgNS,"circle");
+  glow.setAttribute("class","star-glow");
+  glow.setAttribute("cx",p.x); glow.setAttribute("cy",p.y);
+  glow.setAttribute("r",26);
+  glow.setAttribute("fill",hslCol(d.hue,80,60));
+  glow.setAttribute("opacity",0.18);
+  glow.setAttribute("filter","blur(6px)");
+
+  const core = document.createElementNS(svgNS,"circle");
+  core.setAttribute("class","star-core");
+  core.setAttribute("cx",p.x); core.setAttribute("cy",p.y);
+  core.setAttribute("r",13);
+  core.setAttribute("fill",hslCol(d.hue,80,65));
+
+  const label = document.createElementNS(svgNS,"text");
+  label.setAttribute("class","star-label");
+  label.setAttribute("x",p.x); label.setAttribute("y",p.y + 30);
+  label.textContent = d.name;
+
+  const sub = document.createElementNS(svgNS,"text");
+  sub.setAttribute("class","star-sub");
+  sub.setAttribute("x",p.x); sub.setAttribute("y",p.y + 43);
+  sub.textContent = "explore";
+
+  g.appendChild(glow); g.appendChild(core); g.appendChild(label); g.appendChild(sub);
+  sky.appendChild(g);
+
+  g.addEventListener("click", ()=> openDrawer(d.id));
+  g.addEventListener("keydown", (e)=>{ if(e.key==="Enter" || e.key===" "){ e.preventDefault(); openDrawer(d.id); } });
+
+  d._els = { glow, core };
+});
+
+/* ---------- drawer content ---------- */
+const drawer = document.getElementById("drawer");
+const backdrop = document.getElementById("backdrop");
+const drawerInner = document.getElementById("drawerInner");
+const drawerTopBar = document.getElementById("drawerTopBar");
+
+function renderParagraph(dim){
+  const parts = dim.paragraph.split(/\*\*(.+?)\*\*/g);
+  let html = "";
+  parts.forEach((part,i)=>{
+    if(i % 2 === 1){
+      const entry = dim.vocab.find(v=> v.word.toLowerCase() === part.toLowerCase());
+      if(entry){
+        html += '<span class="term" data-word="' + entry.word + '">' + part + '</span>';
+      } else {
+        html += part;
+      }
+    } else {
+      html += part;
+    }
+  });
+  return html;
+}
+
+function openDrawer(id){
+  const dim = DIMENSIONS.find(d=>d.id===id);
+  visited.add(id);
+  dim.vocab.forEach(v=> collectedWords.set(v.word, {def:v.def, hue:dim.hue, dimName:dim.name}));
+  updateCounts();
+  renderLexicon();
+
+  drawerTopBar.style.background = hslCol(dim.hue,80,60);
+
+  drawerInner.innerHTML =
+    '<p class="drawer-eyebrow">Dimension ' + (DIMENSIONS.indexOf(dim)+1) + ' of 9</p>' +
+    '<h2>' + dim.name + ' wellness</h2>' +
+    '<p class="drawer-tagline">' + dim.tagline + '</p>' +
+    '<p class="body-text">' + renderParagraph(dim) + '</p>' +
+    '<p class="vocab-heading">Words worth keeping</p>' +
+    '<ul class="vocab-list" id="vocabList"></ul>' +
+    '<div class="quiz-box"><h3>Quick check</h3>' +
+      '<p>' + dim.quiz.q + '</p>' +
+      '<div class="quiz-options" id="quizOptions"></div>' +
+      '<p class="quiz-feedback" id="quizFeedback"></p>' +
+    '</div>';
+
+  const vocabList = document.getElementById("vocabList");
+  dim.vocab.forEach(v=>{
+    const li = document.createElement("li");
+    li.className = "vocab-item";
+    li.innerHTML = '<span class="vocab-word">' + v.word + '</span><div class="vocab-def">' + v.def + '</div>';
+    li.addEventListener("click", ()=> li.classList.toggle("open"));
+    vocabList.appendChild(li);
+  });
+
+  drawerInner.querySelectorAll(".term").forEach(t=>{
+    t.addEventListener("click", ()=>{
+      const target = vocabList.querySelector('.vocab-item .vocab-word');
+      const items = vocabList.querySelectorAll(".vocab-item");
+      items.forEach(item=>{
+        if(item.querySelector(".vocab-word").textContent.toLowerCase() === t.dataset.word.toLowerCase()){
+          item.classList.add("open");
+          item.scrollIntoView({behavior:"smooth", block:"center"});
+        }
+      });
+    });
+  });
+
+  const optsWrap = document.getElementById("quizOptions");
+  const feedback = document.getElementById("quizFeedback");
+  dim.quiz.options.forEach((opt,idx)=>{
+    const btn = document.createElement("button");
+    btn.textContent = opt;
+    btn.addEventListener("click", ()=>{
+      const buttons = optsWrap.querySelectorAll("button");
+      buttons.forEach(b=> b.disabled = true);
+      if(idx === dim.quiz.correct){
+        btn.classList.add("correct");
+      } else {
+        btn.classList.add("incorrect");
+        buttons[dim.quiz.correct].classList.add("correct");
+      }
+      feedback.textContent = dim.quiz.explain;
+      feedback.classList.add("open");
+    });
+    optsWrap.appendChild(btn);
+  });
+
+  drawer.classList.add("open");
+  backdrop.classList.add("open");
+  drawer.setAttribute("aria-hidden","false");
+  document.getElementById("drawerClose").focus();
+}
+
+function closeDrawer(){
+  drawer.classList.remove("open");
+  backdrop.classList.remove("open");
+  drawer.setAttribute("aria-hidden","true");
+}
+document.getElementById("drawerClose").addEventListener("click", closeDrawer);
+backdrop.addEventListener("click", closeDrawer);
+document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeDrawer(); });
+
+/* ---------- counts + lexicon ---------- */
+function updateCounts(){
+  document.getElementById("dimCount").textContent = visited.size;
+  document.getElementById("wordCount").textContent = collectedWords.size;
+}
+
+function renderLexicon(){
+  const grid = document.getElementById("lexiconGrid");
+  const empty = document.getElementById("lexiconEmpty");
+  if(collectedWords.size === 0){ empty.style.display="block"; grid.innerHTML=""; return; }
+  empty.style.display = "none";
+  const sorted = Array.from(collectedWords.entries()).sort((a,b)=> a[0].localeCompare(b[0]));
+  grid.innerHTML = sorted.map(([word,info])=>
+    '<div class="lex-card" style="border-left-color:' + hslCol(info.hue,80,60) + '">' +
+      '<div class="lex-word">' + word + '</div>' +
+      '<div class="lex-def">' + info.def + '</div>' +
+    '</div>'
+  ).join("");
+}
+
+/* ---------- sliders ---------- */
+const slidersWrap = document.getElementById("sliders");
+DIMENSIONS.forEach(dim=>{
+  const row = document.createElement("div");
+  row.className = "slider-row";
+  row.innerHTML =
+    '<span class="slider-name">' + dim.name + '</span>' +
+    '<input type="range" min="1" max="10" value="5" data-id="' + dim.id + '">' +
+    '<span class="slider-state" id="state-' + dim.id + '">steady</span>';
+  slidersWrap.appendChild(row);
+});
+
+function brightnessWord(v){
+  if(v <= 3) return "faint";
+  if(v <= 7) return "steady";
+  return "blazing";
+}
+
+slidersWrap.addEventListener("input", (e)=>{
+  if(e.target.tagName !== "INPUT") return;
+  const id = e.target.dataset.id;
+  const val = Number(e.target.value);
+  const dim = DIMENSIONS.find(d=>d.id===id);
+  const frac = val/10;
+  dim._els.core.setAttribute("r", 8 + frac*14);
+  dim._els.glow.setAttribute("r", 16 + frac*28);
+  dim._els.glow.setAttribute("opacity", 0.1 + frac*0.35);
+  document.getElementById("state-" + id).textContent = brightnessWord(val);
+});
+
+/* ---------- practice: fill the gap ---------- */
+const FILL_ITEMS = [
+  { sentence:"Even after setbacks, her ___ helped her get back on track quickly.",
+    answer:"resilience", options:["resilience","discretionary","pluralism","transcendence"] },
+  { sentence:"Keeping a journal is one simple way to practise ___.",
+    answer:"introspection", options:["introspection","footprint","aptitude","heritage"] },
+  { sentence:"Listening without judging is one of the clearest signs of ___.",
+    answer:"empathy", options:["empathy","frugality","ethos","mindfulness"] },
+  { sentence:"Reading widely, and doubting easily, sharpens your ___.",
+    answer:"discernment", options:["discernment","catharsis","stewardship","vocation"] },
+  { sentence:"A single fallen tree can change an entire ___.",
+    answer:"ecosystem", options:["ecosystem","solvency","equanimity","diligence"] },
+  { sentence:"Standing beneath the northern lights, many visitors feel a quiet sense of ___.",
+    answer:"reverence", options:["reverence","autonomy","symbiosis","literacy"] },
+  { sentence:"The project succeeded mainly because of her ___ over many months.",
+    answer:"diligence", options:["diligence","reciprocity","paradigm","assimilation"] },
+  { sentence:"Choosing the cheaper option without feeling deprived is a small act of ___.",
+    answer:"frugality", options:["frugality","camaraderie","purpose","vitality"] },
+  { sentence:"Losing your first language after moving abroad is sometimes a sign of ___.",
+    answer:"assimilation", options:["assimilation","contemplation","exertion","sedentary"] }
+];
+
+function renderFillPanel(){
+  const wrap = document.getElementById("fillPanel");
+  wrap.innerHTML = '<div class="practice-grid" id="fillGrid"></div>';
+  const grid = document.getElementById("fillGrid");
+  FILL_ITEMS.forEach(item=>{
+    const [before, after] = item.sentence.split("___");
+    const shuffled = [...item.options].sort(()=> Math.random()-0.5);
+    const card = document.createElement("div");
+    card.className = "practice-card";
+    card.innerHTML =
+      '<p class="sentence">' + before +
+      '<select><option value="">choose…</option>' +
+      shuffled.map(o=> '<option value="' + o + '">' + o + '</option>').join("") +
+      '</select>' + after + '</p>' +
+      '<button class="check-btn">Check</button>' +
+      '<p class="practice-feedback"></p>';
+    const select = card.querySelector("select");
+    const btn = card.querySelector(".check-btn");
+    const feedback = card.querySelector(".practice-feedback");
+    btn.addEventListener("click", ()=>{
+      if(!select.value){
+        feedback.textContent = "Choose a word first.";
+        feedback.className = "practice-feedback open";
+        return;
+      }
+      if(select.value.toLowerCase() === item.answer.toLowerCase()){
+        feedback.textContent = "Correct. \"" + item.answer + "\" fits perfectly here.";
+        feedback.className = "practice-feedback open correct";
+      } else {
+        feedback.textContent = 'Not quite. The word that fits is "' + item.answer + '".';
+        feedback.className = "practice-feedback open incorrect";
+      }
+    });
+    grid.appendChild(card);
+  });
+}
+
+/* ---------- practice: unscramble ---------- */
+const SCRAMBLE_ITEMS = [
+  { word:"vitality", hint:"Energy and liveliness; the strength to stay active and engaged." },
+  { word:"vulnerability", hint:"Openness to being hurt, physically or emotionally." },
+  { word:"solidarity", hint:"Unity and mutual support within a group, especially in difficulty." },
+  { word:"paradigm", hint:"A typical pattern or model of how something works." },
+  { word:"footprint", hint:"The measurable impact a person or activity has on the environment." },
+  { word:"mindfulness", hint:"Sustained, non-judgemental attention to the present moment." },
+  { word:"autonomy", hint:"The freedom to make your own decisions and act on them." },
+  { word:"solvency", hint:"The ability to meet financial obligations as they come due." },
+  { word:"heritage", hint:"Customs and beliefs passed down through generations." }
+];
+
+function shuffleWord(word){
+  let arr = word.toUpperCase().split("");
+  let attempts = 0;
+  do{
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]] = [arr[j],arr[i]];
+    }
+    attempts++;
+  } while(arr.join("") === word.toUpperCase() && attempts < 10);
+  return arr;
+}
+
+function renderScramblePanel(){
+  const wrap = document.getElementById("scramblePanel");
+  wrap.innerHTML = '<div class="practice-grid" id="scrambleGrid"></div>';
+  const grid = document.getElementById("scrambleGrid");
+  SCRAMBLE_ITEMS.forEach(item=>{
+    const card = document.createElement("div");
+    card.className = "practice-card";
+    card.innerHTML =
+      '<p class="scramble-hint">' + item.hint + '</p>' +
+      '<div class="answer-row"></div>' +
+      '<div class="tile-row"></div>' +
+      '<div class="scramble-actions"><button class="check-btn">Check</button><button class="reset-btn">Reset</button></div>' +
+      '<p class="practice-feedback"></p>';
+    grid.appendChild(card);
+    setupScrambleCard(card, item);
+  });
+}
+
+function setupScrambleCard(card, item){
+  const answerEl = card.querySelector(".answer-row");
+  const tilesEl = card.querySelector(".tile-row");
+  const fb = card.querySelector(".practice-feedback");
+  const checkBtn = card.querySelector(".check-btn");
+  const resetBtn = card.querySelector(".reset-btn");
+  let letters, assembled;
+
+  function draw(){
+    tilesEl.innerHTML = "";
+    letters.forEach((ch, idx)=>{
+      const t = document.createElement("span");
+      t.className = "tile"; t.textContent = ch;
+      t.addEventListener("click", ()=>{
+        assembled.push(letters.splice(idx,1)[0]);
+        draw();
+      });
+      tilesEl.appendChild(t);
+    });
+    answerEl.innerHTML = "";
+    assembled.forEach((ch, idx)=>{
+      const t = document.createElement("span");
+      t.className = "tile"; t.textContent = ch;
+      t.addEventListener("click", ()=>{
+        letters.push(assembled.splice(idx,1)[0]);
+        draw();
+      });
+      answerEl.appendChild(t);
+    });
+  }
+  function start(){
+    letters = shuffleWord(item.word);
+    assembled = [];
+    fb.className = "practice-feedback";
+    draw();
+  }
+
+  checkBtn.addEventListener("click", ()=>{
+    const attempt = assembled.join("").toLowerCase();
+    if(attempt === item.word.toLowerCase()){
+      fb.textContent = "Correct. Well spelled.";
+      fb.className = "practice-feedback open correct";
+    } else {
+      fb.textContent = "Not yet. Keep rearranging the tiles.";
+      fb.className = "practice-feedback open incorrect";
+    }
+  });
+  resetBtn.addEventListener("click", start);
+
+  start();
+}
+
+/* ---------- practice tabs ---------- */
+document.querySelectorAll(".tab-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab-btn").forEach(b=> b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("fillPanel").hidden = btn.dataset.tab !== "fill";
+    document.getElementById("scramblePanel").hidden = btn.dataset.tab !== "scramble";
+  });
+});
+
+renderFillPanel();
+renderScramblePanel();
+
+/* ---------- theme toggle ---------- */
+const themeToggle = document.getElementById("themeToggle");
+function applyTheme(theme){
+  if(theme === "light"){
+    document.documentElement.setAttribute("data-theme","light");
+    themeToggle.textContent = "Dark mode";
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+    themeToggle.textContent = "Light mode";
+  }
+}
+applyTheme("dark");
+themeToggle.addEventListener("click", ()=>{
+  const isLight = document.documentElement.getAttribute("data-theme") === "light";
+  applyTheme(isLight ? "dark" : "light");
+});
+
+/* ---------- ambient starfield ---------- */
+const field = document.getElementById("starfield");
+for(let i=0;i<50;i++){
+  const s = document.createElement("span");
+  s.style.left = Math.random()*100 + "vw";
+  s.style.top = Math.random()*100 + "vh";
+  s.style.animationDelay = (Math.random()*5) + "s";
+  s.style.animationDuration = (4 + Math.random()*4) + "s";
+  field.appendChild(s);
+}
+</script>
+</body>
+</html>
